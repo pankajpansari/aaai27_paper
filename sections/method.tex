@@ -1,0 +1,56 @@
+\subsection{Ground Truth Dataset Collection}
+Each datapoint consists of an image, a question, and measured value. The categories we consider are:
+
+\textbf{Weight} - When posing questions about weight, we avoid asking about standard packaging. For instance, instead of asking
+about the weight of a packaged quantity of sugar, that's likely to be in standard weights, we instead draw some amount of sugar
+and ask about its weight. To do well on such questions, one must be familiar with (i) relative densities of materials, (ii) be able
+to infer the size or quantity of an object by spatial reasoning from other objects in the scene. We used a kitchen scale, 
+a luggage scale (with hook), and a bathroom weighing scale to obtain the ground truth, depending on size of object.
+
+\textbf{Volume} - This consists of two types: (i) how much volume of liquid a container is holding or can hold, 
+(ii) what is the volume of an object itself. We used beakers of various capacities to measure volume. For (ii), we submerged the object
+in water and measured volume of displaced liquid. Since the objects often have complex geometries, spatial reasoning by itself is
+insufficient to do well on these questions.
+
+\textbf{Angle} - We ask about the angle of inclination between two objects. The angle to be determined is annotated in image with a hand-drawn
+arc. We measure the angle with either a protractor or a digital inclinometer, depending on the setting.
+
+\textbf{Degree of stability} - In the image, we show a stable configuration of objects and ask about the degree of perturbation needed to make
+it unstable. The choice of this type of question is motivated by two considerations: (i) the answer is a numerical value, (ii) it is hard to
+capture a configuration in a unstable state; it's much more likely that the scene shown in the image will correspond to a stable state. This makes
+the binary version of the question easy to answer. To get the ground truth, we perturb the object in question and measure the point at which
+the configuration of the scene becomes unstable.
+
+\textbf{Geometric Fit} - We ask here whether one object has enough vacant space to fully contain another object. Often the object to be contained
+is deformable and our question permits bending, twisting such objects to the extend that the object is not damaged. Had both the objects been non-deformable, our question would involve just
+spatial reasoning - estimation of dimensions of the two objects. To do well in our setting, however, it helps to have a feel of how pliable objects
+are and the degrees to which they can be deformed. The ground truth is obtained by us trying to make the object in question fit within the other
+and noting the result.
+
+Our considerations when collecting the dataset were:
+
+\begin{itemize}
+    \item The values should span a wide range. We've attempted to ask questions about small, medium and large objects in the scene. This was
+    more feasible for weight and angle. Due to difficulties in capturing ground truth, we mostly considered small and medium objects for volume,
+    degree of stability, and geometric fit questions.
+    \item The questions test for abilities beyond spatial reasoning. Strong priors, such as for relative density or flexibility, are needed to answer the questions correctly that the image
+    is often insufficient to convey fully and gets instilled by physical interactions. We note that spatial reasoning is also very important
+    to do well on our tests. This is strongly the case for angle and to some extent volume estimation.
+    \item To the extent possible, we've tried to capture images outdoors. This brings more heterogeneity - for instance with natural lighting and texture
+    variations.
+    \item We've ensured that there are plenty of reference objects around in the scene and clearly visible. So for instance, we avoid images where a single image is
+    captured in close-up. The reference objects provide anchors and make it more feasible to answer physical property questions about another object. In our
+    daily experience, humans also draw upon such references and comparisons.
+    \item We've tried to capture objects from atypical angles to the extent that it's feasible to answer the question posed. This means that often
+    lateral viewpoints were preferred over frontal viewpoints. This is to make the estimation more difficult and draw more strongly upon priors.
+    \item The final basis for deciding whether to include a datapoint in the dataset is whether there is enough information in the image 
+    to make it possible for humans to take a meaningful shot at answering the question. We ensure that there are no trick questions or setups
+    that cause visual illusions.
+\end{itemize}
+\subsection{Simple Evaluation}
+
+\subsection{Prompt Template}
+
+\subsection{Tool Augmentation}
+
+\subsection{Fine-tuning open weight VLM}
