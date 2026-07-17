@@ -37,16 +37,41 @@ For categories with numerical answers such as weight, volume, angle, and degree 
 
 For the reasoning traces, we perform qualitative analysis. [TODO]
 
+\subsection{Robustness Evaluation of Frontier LLMs}
+  Consider the images for our estimation questions. If we blur them a little, a human being is still likely to reason tFor the kind of estimation tasks we are interested in, it suffices to know the basic shapes, identities and orientations of objects in the image. Some kinds of information like brand names of products can make the VLMs fall back on recall from memory. To strongly test for how well the VLMs are able to reason, we introduce varying levels of blur - low, medium, and high - in each image. We implement this using Gaussian kernel with varying standard deviations. Note that the important information to be able to answer 
+
+
 \subsection{Interventions to Improve Model Performance}
 
 We aim to improve the peformance of VLMs on our estimation tasks by the following interventions. We tried prompt template and fine-tuning work on small and medium open-weight VLMs. The tool augmentation approach was used for closed weight frontier models.
 
 \subsubsection{Intervention 1: Prompt Template}
-We investigate whether giving a detailed system prompt can help guide a model to make more accurate inferences. We first do benchmark evaluation on the target smaller models. For each model and for category, we identify the samples where the target model does noticeably worse than closed models. We 
- For each category, the system prompt is derived by comparing
+We investigate whether giving a detailed system prompt can help guide a model to make more accurate inferences. To achieve this, we use a form of model distillation we describe now. We first do benchmark evaluation on the target smaller models. For each model and for category, we identify the samples where the target model does noticeably worse than a good quality closed model. For each category, the system prompt is derived by comparing the reasoning trace of the small target model and larger closed model for a set of datapoints in that category. Specifically, given these pairs, we ask a large closed model to identify the differences in patterns of reasoning between the well-performing larger model and the worse small model. This difference generalizes over the pairs in the entire set for that category.
+
+We evaluate the small model again on the benchmark dataset but this time it is given the prompt template we derived as system prompt.
 
 \subsubsection{Intervention 2: Tool Augmentation}
+In this intervention, we aim to improve the performance of a small VLM by giving it more contextual information for each datapoint to help it reason better. The contextual information is derived by running external tools offline for each datapoint and then giving that information in a structured manner as part of the input prompt of questioning. These were the tools we used:
 
+\begin{itemize}
+\item Salient object identifier: This is a VLM that takes in the input image and returns the list of important objects in the scene.
+\item Segmentation model: This model generates segmentation masks for the list of salient objects identified. 
+\item Depth model: We first use a model that given an image estimates depth from camera for each pixel. To get the depth of each salient object, we average the depth values for all pixels belonging to that object. We make use of the segmention masks to identify which pixels belong to an object.
+\item Density table: For each image in dataset, we ask a VLM to identify the materials of the salient objects. We arrive at a list of 22 materials and specify their densities in kilograms per $m^3$ to get a table.
+\item Labeled angle schemas: We provided a set of images where in each image two lines intersect at a specified angle. The angles we considered for this set are 0, 45, 90, 135, and 180 degrees.
+\end{itemize}
 
+Not all of these above tool outputs are relevant to every category of estimation. To avoid overwhelming the context with unnecessary information, we only the following tool outputs for specific categories:
+
+\begin{itemize}
+\item Weight: Depth of salient objects plus density table.
+\item Angle: Depth of salient objects plus labeled angle schemas.
+\item Volume: Only depth of salient objects.
+\item Degree of stability: Only depth of salient objects.
+\item Geometric fit: Only depth of salient objects.
+\end{itemize}
 
 \subsubsection{Intervention 3: Fine-tuning open weight VLM}
+We fine-tune small open-weight VLMs on a training dataset based on weight and volume estimation tasks. To derive the dataset, we use automatically selected a subset of images from publicly available image-classification datasets. For inclusion in our training set, an image should be such that it's feasible to pose and answer an estimation question using it. For example, a good candidate image should not have an object in close focus; there should be diverse objects in surroundings which can act as references or anchors during reasoning. To select such images, we use a strong VLM with a prompt that specifies our desidarata. The strong VLM then gives us scores for whether the input image can be a good candidate for one of our five estimation categories. We found that most of the selected images belonged to weight and volume estimation. Since the fine-tuning dataset must at least comprise a few thousand samples, we restricted ourselves to weight and volume estimation fine-tuning to limit compute expense.
+
+We used parameter-efficient fine-tuning using low-rank adaptation (LoRA).
